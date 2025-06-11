@@ -12,6 +12,7 @@ try {
     $selection = Select-ExchangeServer
     $global:Server = $selection.Primary
     $global:AllExchangeServers = $selection.All
+    $global:cert = $null
 } catch {
     Write-Error "Failed to select a valid Exchange server. $_"
     exit 1
