@@ -1,4 +1,5 @@
 function Select-ExchangeServer {
+    Write-Host "`nWelcome to the Manage-ExchangeCert CLI.`n"
     $servers = Get-ExchangeServer | Sort-Object Name
     if (-not $servers) {
         throw "No Exchange servers found in this environment."

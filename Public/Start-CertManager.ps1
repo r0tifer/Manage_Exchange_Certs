@@ -1,12 +1,7 @@
 function Start-CertManager {
     Clear-Host
-    Write-Host "`nDEBUG: cert=$($global:cert -ne $null), server=$global:Server, all=$($global:AllExchangeServers.Count)`n"
-    Start-Sleep -Seconds 2
-
     do {
         try {
-            Write-Host "`nWelcome to the Manage-ExchangeCert CLI.`n"
-
             if (-not $global:cert) {
                 $global:cert = Prompt-CertSelection
             }

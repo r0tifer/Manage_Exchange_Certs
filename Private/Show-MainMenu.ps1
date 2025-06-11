@@ -1,4 +1,5 @@
 function Show-MainMenu {
+    Write-Host "`nWelcome to the Manage-ExchangeCert CLI.`n"
     Write-Host "`nMain Menu"
     Write-Host "1. Renew Certificate"
     Write-Host "2. Replace Certificate"
