@@ -71,7 +71,14 @@ try {
     Invoke-WebRequest -Uri $repoZipUrl -OutFile $tempZipPath -UseBasicParsing -ErrorAction Stop
 
     Write-Host "Extracting archive..."
-    Expand-Archive -Path $tempZipPath -DestinationPath $env:TEMP -Force
+    # Check if Expand-Archive is available, fallback if not
+    if (Get-Command Expand-Archive -ErrorAction SilentlyContinue) {
+        Expand-Archive -Path $tempZipPath -DestinationPath $env:TEMP -Force
+    } else {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($tempZipPath, $env:TEMP)
+    }
+
 
     Write-Host "Installing to: $finalModulePath"
     if (Test-Path $finalModulePath) {
