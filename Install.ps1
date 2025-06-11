@@ -48,9 +48,11 @@ function Get-InstallPath($choice) {
 
 # --- Main Installer Logic ---
 Clear-Host
-Write-Host "Starting Manage-ExchangeCert.ps1 installation..."
+Write-Host "Starting Manage-ExchangeCert module installation..."
 
-$scriptUrl = "https://raw.githubusercontent.com/r0tifer/Manage_Exchange_Certs/main/Manage-ExchangeCert.ps1"
+$repoZipUrl = "https://github.com/r0tifer/Manage_Exchange_Certs/archive/refs/heads/main.zip"
+$tempZipPath = Join-Path $env:TEMP "ManageExchangeCert-main.zip"
+$tempExtractPath = Join-Path $env:TEMP "Manage_Exchange_Certs-main"
 
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
     Write-Warning "You are not running PowerShell as Administrator. Some install locations may fail."
@@ -59,37 +61,36 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 try {
     $choice = Show-InstallOptions
     $destination = Get-InstallPath -choice $choice
-    $targetFile = Join-Path $destination "Manage-ExchangeCert.ps1"
+    $finalModulePath = Join-Path $destination "ManageExchangeCert"
 
-    Write-Host "`nDownloading Manage-ExchangeCert.ps1 from GitHub..."
-    try {
-        Invoke-WebRequest -Uri $scriptUrl -OutFile $targetFile -UseBasicParsing -ErrorAction Stop
-        Write-Host "Script downloaded to: $targetFile"
-    } catch {
-        if ($_.Exception.Message -match 'Access.*denied') {
-            Write-Error "Access denied writing to: $targetFile"
-            Write-Host "Please re-run this script in an elevated PowerShell session (Run as Administrator)."
-            Read-Host "Press Enter to exit"
-            exit 1
-        } else {
-            Write-Error "Download failed: $_"
-            Read-Host "Press Enter to exit"
-            exit 1
-        }
+    # Clean up any prior download
+    if (Test-Path $tempZipPath) { Remove-Item $tempZipPath -Force }
+    if (Test-Path $tempExtractPath) { Remove-Item $tempExtractPath -Recurse -Force }
+
+    Write-Host "`nDownloading full module from GitHub..."
+    Invoke-WebRequest -Uri $repoZipUrl -OutFile $tempZipPath -UseBasicParsing -ErrorAction Stop
+
+    Write-Host "Extracting archive..."
+    Expand-Archive -Path $tempZipPath -DestinationPath $env:TEMP -Force
+
+    Write-Host "Installing to: $finalModulePath"
+    if (Test-Path $finalModulePath) {
+        Remove-Item -Recurse -Force $finalModulePath
+    }
+    Move-Item -Path $tempExtractPath -Destination $finalModulePath
+
+    Remove-Item $tempZipPath -Force
+
+    $psm1Path = Join-Path $finalModulePath "ManageExchangeCert.psm1"
+    if (-not (Test-Path $psm1Path)) {
+        throw "Module file not found: $psm1Path"
     }
 
-    Write-Host "Importing script..."
-    try {
-        . $targetFile
-        Write-Host "Script successfully imported."
-    } catch {
-        Write-Error "Failed to import the script: $_"
-        Read-Host "Press Enter to exit"
-        exit 1
-    }
+    Write-Host "Importing module..."
+    Import-Module $psm1Path -Force
+    Write-Host "Module successfully imported."
 
-    # Final Countdown Launch
-    Write-Host "`nLaunching Manage-ExchangeCert.ps1 in 5 seconds..."
+    Write-Host "`nLaunching Manage-ExchangeCert module in 5 seconds..."
     for ($i = 5; $i -ge 1; $i--) {
         Write-Host "$i..."
         Start-Sleep -Seconds 1
