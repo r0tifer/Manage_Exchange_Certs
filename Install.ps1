@@ -47,19 +47,21 @@ function Get-InstallPath($choice) {
 }
 
 # --- Main Installer Logic ---
+Clear-Host
 Write-Host "Starting Manage-ExchangeCert.ps1 installation..."
+
+$scriptUrl = "https://raw.githubusercontent.com/r0tifer/Manage_Exchange_Certs/main/Manage-ExchangeCert.ps1"
+
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
     Write-Warning "You are not running PowerShell as Administrator. Some install locations may fail."
 }
-
-$scriptUrl = "https://raw.githubusercontent.com/r0tifer/Manage_Exchange_Certs/main/Manage-ExchangeCert.ps1"
 
 try {
     $choice = Show-InstallOptions
     $destination = Get-InstallPath -choice $choice
     $targetFile = Join-Path $destination "Manage-ExchangeCert.ps1"
 
-    Write-Host "Downloading Manage-ExchangeCert.ps1 from GitHub..."
+    Write-Host "`nDownloading Manage-ExchangeCert.ps1 from GitHub..."
     try {
         Invoke-WebRequest -Uri $scriptUrl -OutFile $targetFile -UseBasicParsing -ErrorAction Stop
         Write-Host "Script downloaded to: $targetFile"
@@ -80,12 +82,22 @@ try {
     try {
         . $targetFile
         Write-Host "Script successfully imported."
-        Write-Host "You may now run: Start-CertManager"
     } catch {
         Write-Error "Failed to import the script: $_"
         Read-Host "Press Enter to exit"
         exit 1
     }
+
+    # Final Countdown Launch
+    Write-Host "`nLaunching Manage-ExchangeCert.ps1 in 5 seconds..."
+    for ($i = 5; $i -ge 1; $i--) {
+        Write-Host "$i..."
+        Start-Sleep -Seconds 1
+    }
+
+    Clear-Host
+    Start-CertManager
+
 } catch {
     Write-Error "Installation failed: $_"
     Read-Host "Press Enter to exit"
