@@ -85,7 +85,6 @@ try {
         Remove-Item -Recurse -Force $finalModulePath
     }
     Move-Item -Path $tempExtractPath -Destination $finalModulePath
-
     Remove-Item $tempZipPath -Force
 
     $psm1Path = Join-Path $finalModulePath "ManageExchangeCert.psm1"
@@ -99,14 +98,25 @@ try {
     Start-Sleep -Seconds 3
     Clear-Host
 
-    Write-Host "`nLaunching Manage-ExchangeCert module in 5 seconds..."
+    Write-Host "`nLaunching Manage-ExchangeCert CLI in 5 seconds..."
     for ($i = 5; $i -ge 1; $i--) {
         Write-Host "$i..."
         Start-Sleep -Seconds 1
     }
 
     Clear-Host
-    Start-CertManager
+
+    try {
+        $selection = Select-ExchangeServer
+        $global:Server = $selection.Primary
+        $global:AllExchangeServers = $selection.All
+        $global:cert = $null
+        Start-CertManager
+    } catch {
+        Write-Error "Failed to launch CLI: $_"
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
 
 } catch {
     Write-Error "Installation failed: $_"
