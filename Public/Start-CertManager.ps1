@@ -1,27 +1,40 @@
 function Start-CertManager {
     Clear-Host
+    Write-Host "`nDEBUG: cert=$($global:cert -ne $null), server=$global:Server, all=$($global:AllExchangeServers.Count)`n"
+    Start-Sleep -Seconds 2
+
     do {
         try {
+            Write-Host "`nWelcome to the Manage-ExchangeCert CLI.`n"
+
             if (-not $global:cert) {
                 $global:cert = Prompt-CertSelection
             }
+
             Show-MainMenu
             $mainAction = Read-Host "Enter your choice"
 
             switch ($mainAction) {
-                '1' { Clear-Host; Renew-Certificate -cert $cert -server $Server -allServers $AllExchangeServers }
-                '2' { Clear-Host; Replace-Certificate -cert $cert -server $Server -allServers $AllExchangeServers }
-                '3' { Clear-Host; Revoke-Certificate -cert $cert; $cert = $null }
-                '4' { Clear-Host; Delete-Certificate -cert $cert; $cert = $null }
-                '5' { Clear-Host; Export-Certificate -cert $cert }
-                '6' { Clear-Host; $cert = Prompt-CertSelection }
+                '1' { Clear-Host; Renew-Certificate -cert $global:cert -server $global:Server -allServers $global:AllExchangeServers }
+                '2' { Clear-Host; Replace-Certificate -cert $global:cert -server $global:Server -allServers $global:AllExchangeServers }
+                '3' { Clear-Host; Revoke-Certificate -cert $global:cert; $global:cert = $null }
+                '4' { Clear-Host; Delete-Certificate -cert $global:cert; $global:cert = $null }
+                '5' { Clear-Host; Export-Certificate -cert $global:cert }
+                '6' {
+                    Clear-Host
+                    $selection = Select-ExchangeServer
+                    $global:Server = $selection.Primary
+                    $global:AllExchangeServers = $selection.All
+                    $global:cert = $null
+                    $global:cert = Prompt-CertSelection
+                }
                 '7' { Clear-Host; Resume-PendingCertificate }
                 '8' {
                     Clear-Host
                     $selection = Select-ExchangeServer
                     $global:Server = $selection.Primary
                     $global:AllExchangeServers = $selection.All
-                    $cert = $null
+                    $global:cert = $null
                 }
                 '9' {
                     Clear-Host
@@ -31,16 +44,17 @@ function Start-CertManager {
                         pause
                         return
                     }
-                    $cert = Prompt-CertSelection
-                    Import-Certificate -cert $cert -server $Server -newCertPath $newCertPath -allServers $AllExchangeServers
+                    $global:cert = Prompt-CertSelection
+                    Import-Certificate -cert $global:cert -server $global:Server -newCertPath $newCertPath -allServers $global:AllExchangeServers
                 }
                 '10' {
-                        Clear-Host
-                        Write-Host "Exiting..."
-                        return
-                    }
-
-                default { Write-Warning "Invalid option." }
+                    Clear-Host
+                    Write-Host "Exiting..."
+                    return
+                }
+                default {
+                    Write-Warning "Invalid option."
+                }
             }
         } catch {
             Write-Warning $_
