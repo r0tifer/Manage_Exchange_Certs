@@ -48,6 +48,9 @@ function Get-InstallPath($choice) {
 
 # --- Main Installer Logic ---
 Write-Host "Starting Manage-ExchangeCert.ps1 installation..."
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+    Write-Warning "You are not running PowerShell as Administrator. Some install locations may fail."
+}
 
 $scriptUrl = "https://raw.githubusercontent.com/r0tifer/Manage_Exchange_Certs/main/Manage-ExchangeCert.ps1"
 
@@ -57,14 +60,34 @@ try {
     $targetFile = Join-Path $destination "Manage-ExchangeCert.ps1"
 
     Write-Host "Downloading Manage-ExchangeCert.ps1 from GitHub..."
-    Invoke-WebRequest -Uri $scriptUrl -OutFile $targetFile -UseBasicParsing -ErrorAction Stop
-    Write-Host "Script downloaded to: $targetFile"
+    try {
+        Invoke-WebRequest -Uri $scriptUrl -OutFile $targetFile -UseBasicParsing -ErrorAction Stop
+        Write-Host "Script downloaded to: $targetFile"
+    } catch {
+        if ($_.Exception.Message -match 'Access.*denied') {
+            Write-Error "Access denied writing to: $targetFile"
+            Write-Host "Please re-run this script in an elevated PowerShell session (Run as Administrator)."
+            Read-Host "Press Enter to exit"
+            exit 1
+        } else {
+            Write-Error "Download failed: $_"
+            Read-Host "Press Enter to exit"
+            exit 1
+        }
+    }
 
     Write-Host "Importing script..."
-    . $targetFile
-    Write-Host "Script successfully imported."
-    Write-Host "You may now run: Start-CertManager"
+    try {
+        . $targetFile
+        Write-Host "Script successfully imported."
+        Write-Host "You may now run: Start-CertManager"
+    } catch {
+        Write-Error "Failed to import the script: $_"
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
 } catch {
     Write-Error "Installation failed: $_"
+    Read-Host "Press Enter to exit"
     exit 1
 }
