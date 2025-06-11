@@ -79,7 +79,7 @@ try {
         [System.IO.Compression.ZipFile]::ExtractToDirectory($tempZipPath, $env:TEMP)
     }
 
-
+    Clear-Host
     Write-Host "Installing to: $finalModulePath"
     if (Test-Path $finalModulePath) {
         Remove-Item -Recurse -Force $finalModulePath
@@ -96,6 +96,8 @@ try {
     Write-Host "Importing module..."
     Import-Module $psm1Path -Force
     Write-Host "Module successfully imported."
+    Start-Sleep -Seconds 3
+    Clear-Host
 
     Write-Host "`nLaunching Manage-ExchangeCert module in 5 seconds..."
     for ($i = 5; $i -ge 1; $i--) {

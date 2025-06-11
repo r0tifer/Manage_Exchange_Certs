@@ -8,6 +8,7 @@ Export-ModuleMember -Function Start-CertManager, Renew-Certificate, Replace-Cert
 
 # Select Exchange server before launching CLI
 try {
+    Clear-Host
     $selection = Select-ExchangeServer
     $global:Server = $selection.Primary
     $global:AllExchangeServers = $selection.All
