@@ -34,7 +34,12 @@ function Start-CertManager {
                     $cert = Prompt-CertSelection
                     Import-Certificate -cert $cert -server $Server -newCertPath $newCertPath -allServers $AllExchangeServers
                 }
-                '10' { Write-Host "Exiting..."; break }
+                '10' {
+                        Clear-Host
+                        Write-Host "Exiting..."
+                        return
+                    }
+
                 default { Write-Warning "Invalid option." }
             }
         } catch {
